@@ -1,0 +1,66 @@
+Sub FindArray() 'Si no lo dice, es de tipo público.
+    
+    Dim finded() As Variant 'array que contendrá los matches para elegir el con menor diferencia.
+    Dim arraySize As Integer 'entero que indicará el largo del array que contendrá los matches
+    Dim diff As Long 'valor que contendrá la diferencia en horas entre las dos fechas
+    Dim dateIn As Date 'fecha de ingreso, para la resta
+    Dim dateOut As Date 'fecha de salida, para la resta
+    Dim i, j, c As Long 'indicadores de posición dentro del array finded
+    Dim iMin, iMax As Integer
+    Dim Min(1, 3) As Variant 'variable que almacenará el minimo, la dirección y la fecha del minimo
+    
+    For Each cellIn In [ppuIn]
+        'a continuación, se define el largo de la lista con las soluciones según la cantidad de match que se encuentren.
+        arraySize = Application.WorksheetFunction.CountIf(Range("ppuOut"), cellIn)
+        Erase Min
+        Erase finded
+        ReDim finded(arraySize, 3)
+        i = 0
+        
+        For Each cellOut In [ppuOut]
+            
+            
+            If cellIn = cellOut Then
+                dateIn = CDate(cellIn.Offset(0, 1).value)
+                dateOut = CDate(cellOut.Offset(0, 1).value)
+                diff = DateDiff("n", dateIn, dateOut)
+                
+                If diff > 0 And cellOut.Offset(0, 2).value <> 1 Then
+                    'se almacena la diferencia y la celda que contiene la fecha
+                    finded(i, 0) = diff
+                    finded(i, 1) = cellOut.Address
+                    finded(i, 2) = dateOut
+                    'Debug.Print i & " - " & finded(i, 0) & " - " & finded(i, 1) & " - " & finded(i, 2)
+                    
+                    i = i + 1
+
+                End If
+                
+            End If
+        
+        Next cellOut
+        
+        'con el codigo a continuación, se encuentra cual es la menor diferencia de fecha
+        iMin = LBound(finded)
+        iMax = UBound(finded)
+        Min(0, 0) = finded(0, 0)
+        Min(0, 1) = finded(0, 1)
+        Min(0, 2) = finded(0, 2)
+        For c = iMin To iMax
+            If finded(c, 0) < Min(0, 0) And finded(c, 0) <> 0 Then
+                Min(0, 0) = finded(c, 0)
+                Min(0, 1) = finded(c, 1)
+                Min(0, 2) = finded(c, 2)
+            End If
+        Next c
+        
+        'Debug.Print Min(0, 0) & " -> " & Min(0, 1) & " -> " & Min(0, 2)
+        If Min(0, 0) <> 0 Then
+            cellIn.Offset(0, 2).value = Min(0, 2)
+            ThisWorkbook.Sheets("Salidas").Range(Min(0, 1)).Offset(0, 2).value = "1"
+        End If
+                    
+    Next cellIn
+
+        
+End Sub
